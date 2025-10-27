@@ -1,0 +1,25 @@
+{
+  "features_used": [
+    "Month",
+    "Day",
+    "Hour",
+    "time_diff_first_last_received",
+    "total_tx_sent",
+    "total_tx_sent_unique",
+    "mean_value_received",
+    "total_received",
+    "value_volatility",
+    "tx_volatility",
+    "send_receive_imbalance",
+    "unique_behavior_ratio",
+    "is_weekend",
+    "is_night",
+    "is_business_hours",
+    "value_category",
+    "value_anomaly",
+    "frequency_anomaly"
+  ],
+  "performance": 0.8470396218907539,
+  "model_type": "XGBoost",
+  "timestamp": "2025-10-26T14:55:28.721042"
+}

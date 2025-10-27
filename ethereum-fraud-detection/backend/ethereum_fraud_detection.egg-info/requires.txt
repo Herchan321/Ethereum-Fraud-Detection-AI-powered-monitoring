@@ -1,0 +1,7 @@
+web3
+pandas
+numpy
+scikit-learn
+SQLAlchemy
+joblib
+websockets

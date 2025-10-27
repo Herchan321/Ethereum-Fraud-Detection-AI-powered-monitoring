@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: ethereum-fraud-detection
+Version: 0.1.0
+Requires-Python: >=3.8
+Requires-Dist: web3
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: scikit-learn
+Requires-Dist: SQLAlchemy
+Requires-Dist: joblib
+Requires-Dist: websockets
+Dynamic: requires-dist
+Dynamic: requires-python
