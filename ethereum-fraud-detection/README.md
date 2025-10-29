@@ -98,6 +98,47 @@ Troubleshooting
 - If `scikit-learn` raises `InconsistentVersionWarning`, either pin the runtime scikit-learn version to the training version (`1.6.1`) or re-export the model using the newer library.
 - If pandas or other packages fail to build on Windows/Python 3.13, switch to Python 3.11 or install prebuilt wheels.
 
+## Démonstration (vidéo)
+
+Vous pouvez ajouter une courte vidéo de démonstration pour montrer le flux en temps réel et l'interface. Deux approches communes :
+
+- Héberger la vidéo sur YouTube (ou un service public) et l'intégrer avec une iframe :
+
+```md
+<iframe width="560" height="315" src="https://www.youtube.com/embed/VIDÉO_ID" title="Démonstration — Ethereum Fraud Detection" frameborder="0" allowfullscreen></iframe>
+```
+
+Remplacez `VIDÉO_ID` par l'identifiant YouTube de votre vidéo. Cette méthode fonctionne bien pour une page README affichée sur GitHub (la miniature sera visible; GitHub n'autorise pas l'exécution d'iframes dans la vue rendue, mais les lecteurs CLI/GitHub Pages l'utiliseront).
+
+- Si vous préférez inclure un fichier local dans le dépôt, placez `demo.mp4` sous `docs/demo.mp4` et utilisez la balise HTML5 :
+
+```md
+<video controls width="720">
+	<source src="./docs/demo.mp4" type="video/mp4">
+	Votre navigateur ne supporte pas la lecture vidéo.
+</video>
+```
+
+Remarque : GitHub ne lit pas toujours les vidéos locales dans la page README sur le site web. Utilisez GitHub Pages or un lien direct pour un rendu fiable.
+
+- Alternative légère : un GIF animé (ex. `docs/demo.gif`). Pour générer un GIF à partir d'une vidéo avec ffmpeg :
+
+```bash
+# Extraire une portion et créer un GIF optimisé
+ffmpeg -ss 00:00:02 -t 8 -i demo.mp4 -vf "fps=12,scale=720:-1:flags=lanczos" -loop 0 docs/demo.gif
+```
+
+Placez la GIF dans `docs/` puis insérez-la dans le README comme une image :
+
+```md
+![Démonstration — Ethereum Fraud Detection](./docs/demo.gif)
+```
+
+Conseils pratiques
+- Favorisez une courte démonstration (20–30s) qui montre : démarrage du serveur, ouverture du dashboard, réception d'une transaction et badge de risque.
+- Mettez la vidéo ou le GIF dans `docs/` pour séparer les gros assets du code source.
+- Ajoutez la source YouTube dans la section « Releases » ou dans la page GitHub Pages si vous utilisez un site de documentation.
+
 Deployment
 - A `docker-compose.yml` is provided in `configuration/` to run the backend and frontend together (set environment variables in `.env`).
 - For production, deploy the backend behind a process manager, enable HTTPS on the frontend, and use a managed Postgres instance.
