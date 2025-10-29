@@ -139,6 +139,36 @@ Conseils pratiques
 - Mettez la vidéo ou le GIF dans `docs/` pour séparer les gros assets du code source.
 - Ajoutez la source YouTube dans la section « Releases » ou dans la page GitHub Pages si vous utilisez un site de documentation.
 
+### Démo incluse dans ce dépôt
+
+Un fichier vidéo de démonstration a été ajouté localement au dépôt. Vous pouvez l'insérer directement dans le README (HTML5) :
+
+```html
+<video controls width="720">
+	<source src="./Détection de Fraude Ethereum par IA et 2 pages de plus - École – Microsoft​ Edge 2025-10-29 20-41-49.mp4" type="video/mp4">
+	Votre navigateur ne supporte pas la lecture vidéo.
+</video>
+```
+
+Remarque importante : le fichier vidéo a un nom long et contient des caractères accentués — pour plus de propreté, je recommande de déplacer/renommer ce fichier en `docs/demo.mp4`.
+
+Garantie du changement
+- Si vous avez commité la vidéo sur une nouvelle branche (ex. `add-demo-video`), poussez-la sur GitHub pour préserver l'asset :
+
+```powershell
+git push origin HEAD:refs/heads/add-demo-video
+```
+
+- Pour intégrer la vidéo dans `main`, récupérez les derniers changements distants et rebase (ou merge) avant de push :
+
+```powershell
+git fetch origin
+git pull --rebase origin main
+git push origin main
+```
+
+Si vous voulez que je renomme et pousse automatiquement le fichier dans `docs/demo.mp4` et mette à jour le README pour pointer vers ce chemin plus propre, dites-le et j'appliquerai la modification.
+
 Deployment
 - A `docker-compose.yml` is provided in `configuration/` to run the backend and frontend together (set environment variables in `.env`).
 - For production, deploy the backend behind a process manager, enable HTTPS on the frontend, and use a managed Postgres instance.
