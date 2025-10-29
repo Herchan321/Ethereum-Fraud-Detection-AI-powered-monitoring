@@ -10,6 +10,7 @@ import websockets
 from web3 import Web3
 import socket
 import warnings
+import urllib.parse
 
 # Add the app directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,9 +24,10 @@ from app.feature_extraction import compute_wallet_features
 from sqlalchemy.exc import IntegrityError
 
 # WebSocket configuration
-WEBSOCKET_HOST = '0.0.0.0'
+# Use 'localhost' instead of '127.0.0.1' to accept both IPv4 and IPv6
+WEBSOCKET_HOST = 'localhost'  # ← CHANGÉ: accepte IPv4 et IPv6
 WEBSOCKET_PORT = 8765
-MAX_CONNECTIONS = 10
+MAX_CONNECTIONS = 100
 
 # Store connected clients
 connected_clients = {}
@@ -58,7 +60,6 @@ def is_port_in_use(port: int) -> bool:
         except:
             pass
         return True
-
 
 # Initialize Web3
 ALCHEMY_WS = os.getenv('ALCHEMY_WS', "wss://eth-mainnet.g.alchemy.com/v2/Ef1v-4uGjH1wd-LkT9Mti")
@@ -117,7 +118,7 @@ def save_to_database(tx_data):
             logger.debug(f"Transaction {tx_data['hash'][:16]}... already in DB")
             return True
         
-        # Create new transaction record (Transaction model doesn't include classification)
+        # Create new transaction record
         tx_row = Transaction(
             hash=tx_data['hash'],
             from_address=tx_data['from'],
@@ -149,6 +150,12 @@ def save_to_database(tx_data):
             session.close()
 
 
+def process_request(path, request_headers):
+    """HTTP handler - disabled to avoid conflicts with WebSocket handshake"""
+    # Always return None to let websockets handle all connections
+    return None
+
+
 def extract_features(tx):
     """Extract relevant features for fraud detection"""
     logger.debug(f"Processing transaction: {tx.get('hash', '').hex()[:16]}...")
@@ -156,7 +163,7 @@ def extract_features(tx):
     from_features = compute_wallet_features(tx.get('from', ''))
     to_features = compute_wallet_features(tx.get('to', ''))
     
-    # Combine features (take max as conservative approach)
+    # Combine features
     return {k: max(from_features.get(k, 0), to_features.get(k, 0)) 
             for k in from_features.keys()}
 
@@ -189,12 +196,10 @@ def classify_transaction(features):
         prediction = model.predict(X)[0]
         probability = model.predict_proba(X)[0][1]
         
-        # Threshold for suspicious classification
         return "SUSPICIOUS" if probability > 0.7 else "LEGITIMATE"
     
     except Exception as e:
         logger.error(f"Classification error: {str(e)}")
-        # Fallback to simple rule
         suspicious_indicators = [
             features.get('time_diff_first_last_received', 0) < 300,
             features.get('total_tx_sent', 0) > 50,
@@ -270,12 +275,11 @@ async def handle_client(websocket):
             'server_time': datetime.datetime.now().isoformat()
         }))
         
-        # Keep connection alive and handle messages
+        # Keep connection alive
         async for message in websocket:
             try:
                 data = json.loads(message)
                 
-                # Handle ping/pong
                 if data.get('type') == 'ping':
                     await websocket.send(json.dumps({
                         'type': 'pong',
@@ -288,18 +292,18 @@ async def handle_client(websocket):
                     }))
                 
             except json.JSONDecodeError:
-                logger.error(f"Invalid JSON from {client_info}: {message}")
+                logger.error(f"Invalid JSON from {client_info}")
             except Exception as e:
                 logger.error(f"Error processing message from {client_info}: {str(e)}")
             
     except websockets.exceptions.ConnectionClosed:
-        logger.info(f"Client {client_info} disconnected normally")
+        logger.info(f"✅ Client {client_info} disconnected normally")
     except Exception as e:
-        logger.error(f"Error with client {client_info}: {str(e)}")
+        logger.error(f"❌ Error with client {client_info}: {str(e)}")
     finally:
         if websocket in connected_clients:
             del connected_clients[websocket]
-            logger.info(f"Removed client. Remaining: {len(connected_clients)}")
+            logger.info(f"🧹 Removed client. Remaining: {len(connected_clients)}")
 
 
 async def broadcast_transaction(tx_data):
@@ -348,7 +352,6 @@ async def monitor_transactions():
                     tx_data = handle_transaction(tx)
                     
                     if tx_data:
-                        # Track statistics
                         processed_count += 1
                         if tx_data['classification'] == 'SUSPICIOUS':
                             suspicious_count += 1
@@ -388,7 +391,7 @@ async def main():
         logger.info(f"👥 Max connections: {MAX_CONNECTIONS}")
         logger.info(f"🤖 ML Model: {'Loaded ✅' if model else 'Rule-based ⚠️'}")
 
-        # Start WebSocket server
+        # Start WebSocket server (without process_request to avoid conflicts)
         server = await websockets.serve(
             handle_client,
             WEBSOCKET_HOST,
@@ -399,13 +402,6 @@ async def main():
         )
         
         logger.info(f"✅ Server started at ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
-        
-        # Show network addresses
-        hostname = socket.gethostname()
-        logger.info("🌐 Network access URLs:")
-        for ip in socket.gethostbyname_ex(hostname)[2]:
-            logger.info(f"   ws://{ip}:{WEBSOCKET_PORT}")
-        
         logger.info("=" * 60)
         
         # Start transaction monitoring
